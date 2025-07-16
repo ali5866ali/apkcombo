@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # دریافت کامل تاریخچه git
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -30,24 +30,29 @@ jobs:
       - name: Run main script
         run: python main.py
 
-      - name: Commit and Push changes
+      - name: Configure Git
         run: |
-          # تنظیمات git
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
 
-          # دریافت آخرین تغییرات از ریموت
-          git pull origin main
+      - name: Pull latest changes
+        run: git pull origin main
 
-          # فقط فایل‌های موجود را اضافه کن
-          [ -f packages.json ] && git add packages.json
-          [ -f progress.json ] && git add progress.json
-          [ -f updated_packages.html ] && git add updated_packages.html
+      - name: Add and Commit changes
+        run: |
+          # فقط فایل‌های موجود را اضافه کنید
+          for file in packages.json progress.json updated_packages.html; do
+            if [ -f "$file" ]; then
+              git add "$file"
+            fi
+          done
 
-          # بررسی وجود تغییرات برای commit
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
+          # اگر تغییری برای commit وجود دارد
+          if [ -n "$(git status --porcelain)" ]; then
             git commit -m "Automated update: $(date +'%Y-%m-%d %H:%M')"
-            git push origin main
+          else
+            echo "No changes to commit"
           fi
+
+      - name: Push changes
+        run: git push origin main
