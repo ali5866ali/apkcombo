@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # برای دریافت کامل تاریخچه Git
+          fetch-depth: 0  # دریافت کامل تاریخچه git
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -32,29 +32,22 @@ jobs:
 
       - name: Commit and Push changes
         run: |
+          # تنظیمات git
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
 
-          # بررسی وجود فایل‌ها و اضافه کردن آنها
-          files_to_add=("packages.json" "progress.json" "updated_packages.html")
-          any_file_added=false
+          # دریافت آخرین تغییرات از ریموت
+          git pull origin main
 
-          for file in "${files_to_add[@]}"; do
-            if [ -f "$file" ]; then
-              git add "$file"
-              any_file_added=true
-            fi
-          done
+          # فقط فایل‌های موجود را اضافه کن
+          [ -f packages.json ] && git add packages.json
+          [ -f progress.json ] && git add progress.json
+          [ -f updated_packages.html ] && git add updated_packages.html
 
-          # فقط اگر فایلی اضافه شده بود commit کن
-          if [ "$any_file_added" = true ]; then
-            git commit -m "Update package versions [skip ci]"
-            
-            # دریافت آخرین تغییرات از ریموت با استراتژی rebase
-            git pull --rebase origin main
-            
-            # انجام push
-            git push origin main
+          # بررسی وجود تغییرات برای commit
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
           else
-            echo "No files to commit."
+            git commit -m "Automated update: $(date +'%Y-%m-%d %H:%M')"
+            git push origin main
           fi
