@@ -28,15 +28,22 @@ jobs:
       - name: Run main script
         run: python main.py
 
-- name: Commit changes
+- name: Commit and Push changes
   run: |
     git config --global user.name "github-actions"
     git config --global user.email "actions@github.com"
-    ls -l packages.json progress.json updated_packages.html || true
+
+    # فقط وقتی فایل‌ها وجود دارند اضافه‌شون کن
     if [ -f packages.json ]; then git add packages.json; fi
     if [ -f progress.json ]; then git add progress.json; fi
     if [ -f updated_packages.html ]; then git add updated_packages.html; fi
+
+    # اگر فایل‌ها اضافه شده باشن commit کن
     git diff --cached --quiet || git commit -m "Update package versions"
+
+    # اول آخرین تغییرات ریموت رو بگیر و با تغییرات خودت ادغام کن
     git pull --rebase origin main || true
+
+    # حالا push کن
     git push origin main
 
