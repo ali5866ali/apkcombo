@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # برای دریافت کامل تاریخچه Git
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -28,22 +30,31 @@ jobs:
       - name: Run main script
         run: python main.py
 
-- name: Commit and Push changes
-  run: |
-    git config --global user.name "github-actions"
-    git config --global user.email "actions@github.com"
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
 
-    # فقط وقتی فایل‌ها وجود دارند اضافه‌شون کن
-    if [ -f packages.json ]; then git add packages.json; fi
-    if [ -f progress.json ]; then git add progress.json; fi
-    if [ -f updated_packages.html ]; then git add updated_packages.html; fi
+          # بررسی وجود فایل‌ها و اضافه کردن آنها
+          files_to_add=("packages.json" "progress.json" "updated_packages.html")
+          any_file_added=false
 
-    # اگر فایل‌ها اضافه شده باشن commit کن
-    git diff --cached --quiet || git commit -m "Update package versions"
+          for file in "${files_to_add[@]}"; do
+            if [ -f "$file" ]; then
+              git add "$file"
+              any_file_added=true
+            fi
+          done
 
-    # اول آخرین تغییرات ریموت رو بگیر و با تغییرات خودت ادغام کن
-    git pull --rebase origin main || true
-
-    # حالا push کن
-    git push origin main
-
+          # فقط اگر فایلی اضافه شده بود commit کن
+          if [ "$any_file_added" = true ]; then
+            git commit -m "Update package versions [skip ci]"
+            
+            # دریافت آخرین تغییرات از ریموت با استراتژی rebase
+            git pull --rebase origin main
+            
+            # انجام push
+            git push origin main
+          else
+            echo "No files to commit."
+          fi
