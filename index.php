@@ -1,27 +1,40 @@
-<?php
-// پروکسی ساده برای گیت هاب پیجز
-$url = $_GET['url'];
-if ($url) {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    $data = curl_exec($ch);
-    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-    curl_close($ch);
-    header("Content-Type: " . $contentType);
-    echo $data;
-    exit;
-}
-?>
 <!DOCTYPE html>
-<html>
-<head><title>GitHub Proxy</title></head>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub Proxy - JS</title>
+    <style>
+        body { font-family: Tahoma; max-width: 900px; margin: 20px auto; padding: 10px; }
+        input[type="text"] { width: 75%; padding: 10px; font-size: 16px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        iframe { width: 100%; height: 600px; border: 1px solid #ccc; margin-top: 10px; }
+    </style>
+</head>
 <body>
-<form method="get">
-    <input type="text" name="url" placeholder="https://apkcombo.com/downloader/" style="width:80%">
-    <input type="submit" value="Go">
-</form>
+    <h2>🌐 مرورگر وب از طریق گیت‌هاب</h2>
+    <form onsubmit="loadSite(event)">
+        <input type="text" id="url" placeholder="https://example.com" value="https://www.wikipedia.org" required>
+        <button type="submit">باز کردن</button>
+    </form>
+    
+    <iframe id="frame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms" loading="lazy"></iframe>
+
+    <script>
+        function loadSite(event) {
+            event.preventDefault();
+            let rawUrl = document.getElementById('url').value.trim();
+            
+            // اضافه کردن https:// اگر کاربر فراموش کرده باشد
+            if (!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+                rawUrl = 'https://' + rawUrl;
+            }
+
+            // استفاده از CORS Proxy عمومی برای رد شدن از فیلتر
+            // این سرویس‌های رایگان CORS Anywhere هستند (یکی را امتحان کنید)
+            const proxy = 'https://api.allorigins.win/raw?url=';
+            
+            document.getElementById('frame').src = proxy + encodeURIComponent(rawUrl);
+        }
+    </script>
 </body>
 </html>
